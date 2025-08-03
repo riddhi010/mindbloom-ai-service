@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches
+.cache/
+*.log
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Environment variables
+.env
+
+# PyTorch / HuggingFace model downloads
+*.pth
+*.pt
+*.bin
+*.ckpt
+*.h5
+huggingface/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# macOS/Windows
+.DS_Store
+Thumbs.db
