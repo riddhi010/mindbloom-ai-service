@@ -3,20 +3,19 @@ from deep_translator import GoogleTranslator
 import sqlite3
 from datetime import datetime
 
-# Load lightweight sentiment model once
-sentiment_pipeline = pipeline("sentiment-analysis")  # default is lighter
+# Lightweight model loaded once
+sentiment_pipeline = pipeline("sentiment-analysis")
 
-
-# --- Emotion Detection ---
+# Emotion Detection
 def detect_emotion(text):
     try:
-        result = sentiment_pipeline(text[:512])[0]  # Truncate long text to 512 tokens
-        label = result['label'].lower()
-        return 'positive' if label == 'positive' else 'negative'
+        text = text[:300]  # Limit length for memory
+        result = sentiment_pipeline(text)[0]
+        return 'positive' if result['label'].lower() == 'positive' else 'negative'
     except:
         return 'neutral'
 
-# --- DB Helper ---
+# DB Setup
 def init_db():
     conn = sqlite3.connect('mindbloom_user_data.db')
     c = conn.cursor()
@@ -35,7 +34,7 @@ def init_db():
 
 init_db()
 
-# --- Goal-specific Activity Suggestions ---
+# Activities for each goal
 goal_activities = {
     "stress relief": [
         "Take a 5-minute breathing break.",
@@ -60,41 +59,7 @@ goal_activities = {
     ]
 }
 
-# --- Main Response Generator ---
-def generate_response(text, user_id=None, goal=None):
-    emotion = detect_emotion(text)
-    support = generate_emotional_reply(text, emotion)
-
-    day = 1
-    next_activity = "Keep going, you're doing great!"
-
-    if user_id and goal:
-        conn = sqlite3.connect('mindbloom_user_data.db')
-        c = conn.cursor()
-
-        # Count previous entries to determine the day
-        c.execute("SELECT COUNT(*) FROM user_progress WHERE user_id=? AND goal=?", (user_id, goal))
-        day = c.fetchone()[0] + 1
-
-        # Choose next activity
-        activities = goal_activities.get(goal.lower(), [])
-        if activities:
-            next_activity = activities[(day - 1) % len(activities)]
-
-        # Save to DB
-        c.execute('''INSERT INTO user_progress (user_id, goal, day, feedback, emotion, next_activity, timestamp)
-                     VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                  (user_id, goal, day, text, emotion, next_activity, datetime.utcnow().isoformat()))
-        conn.commit()
-        conn.close()
-
-    # Final response
-    response = f"{support}"
-    if goal:
-        response += f"\n\n🌱 Your next activity for *{goal.title()}* (Day {day}):\n➡️ {next_activity}"
-    return response
-
-# --- Emotional Reply Helper ---
+# Emotional Reply Logic
 def generate_emotional_reply(text, emotion):
     text = text.lower()
     if 'alone' in text or 'lonely' in text:
@@ -110,7 +75,33 @@ def generate_emotional_reply(text, emotion):
     else:
         return "Thank you for opening up. You're not alone. Take a gentle step forward today 💫"
 
-# --- Translation ---
+# Response Generator
+def generate_response(text, user_id=None, goal=None):
+    emotion = detect_emotion(text)
+    support = generate_emotional_reply(text, emotion)
+    response = f"{support}"
+
+    if user_id and goal:
+        conn = sqlite3.connect('mindbloom_user_data.db')
+        c = conn.cursor()
+
+        c.execute("SELECT COUNT(*) FROM user_progress WHERE user_id=? AND goal=?", (user_id, goal))
+        day = c.fetchone()[0] + 1
+
+        activities = goal_activities.get(goal.lower(), [])
+        next_activity = activities[(day - 1) % len(activities)] if activities else "Keep going, you're doing great!"
+
+        c.execute('''INSERT INTO user_progress (user_id, goal, day, feedback, emotion, next_activity, timestamp)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                  (user_id, goal, day, text, emotion, next_activity, datetime.utcnow().isoformat()))
+        conn.commit()
+        conn.close()
+
+        response += f"\n\n🌱 Your next activity for *{goal.title()}* (Day {day}):\n➡️ {next_activity}"
+
+    return response
+
+# Translation Functions
 def translate_to_english(text):
     try:
         return GoogleTranslator(source='auto', target='en').translate(text)
@@ -119,6 +110,8 @@ def translate_to_english(text):
 
 def translate_back(text, target_lang):
     try:
+        if target_lang == 'en':
+            return text
         return GoogleTranslator(source='en', target=target_lang).translate(text)
     except:
         return text
