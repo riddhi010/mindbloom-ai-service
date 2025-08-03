@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS  # <- import this
 from ai_logic import (
@@ -41,5 +42,5 @@ def generate_activity():
     return jsonify({ "activity": activity_response })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Render sets PORT env variable
+    port = int(os.environ.get('PORT', 10000))  # Render sets PORT env variable
     app.run(host='0.0.0.0', port=port)
