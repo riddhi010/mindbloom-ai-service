@@ -4,7 +4,8 @@ import sqlite3
 from datetime import datetime
 
 # Load lightweight sentiment model once
-sentiment_pipeline = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+sentiment_pipeline = pipeline("sentiment-analysis")  # default is lighter
+
 
 # --- Emotion Detection ---
 def detect_emotion(text):
