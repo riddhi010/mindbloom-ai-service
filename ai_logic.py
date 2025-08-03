@@ -3,21 +3,19 @@ from deep_translator import GoogleTranslator
 import sqlite3
 from datetime import datetime
 
-# Load sentiment analysis pipeline
+# Load lightweight sentiment model once
 sentiment_pipeline = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 
 # --- Emotion Detection ---
 def detect_emotion(text):
-    result = sentiment_pipeline(text)[0]
-    label = result['label'].lower()
-    if label == 'negative':
-        return 'negative'
-    elif label == 'positive':
-        return 'positive'
-    else:
+    try:
+        result = sentiment_pipeline(text[:512])[0]  # Truncate long text to 512 tokens
+        label = result['label'].lower()
+        return 'positive' if label == 'positive' else 'negative'
+    except:
         return 'neutral'
 
-# --- DB Helper Functions ---
+# --- DB Helper ---
 def init_db():
     conn = sqlite3.connect('mindbloom_user_data.db')
     c = conn.cursor()
@@ -36,7 +34,7 @@ def init_db():
 
 init_db()
 
-# --- Goal-based activity pool ---
+# --- Goal-specific Activity Suggestions ---
 goal_activities = {
     "stress relief": [
         "Take a 5-minute breathing break.",
@@ -61,46 +59,55 @@ goal_activities = {
     ]
 }
 
-# --- Main Logic ---
+# --- Main Response Generator ---
 def generate_response(text, user_id=None, goal=None):
     emotion = detect_emotion(text)
+    support = generate_emotional_reply(text, emotion)
+
     day = 1
     next_activity = "Keep going, you're doing great!"
 
-    # Fetch last activity for user
     if user_id and goal:
         conn = sqlite3.connect('mindbloom_user_data.db')
         c = conn.cursor()
+
+        # Count previous entries to determine the day
         c.execute("SELECT COUNT(*) FROM user_progress WHERE user_id=? AND goal=?", (user_id, goal))
         day = c.fetchone()[0] + 1
 
-        # Cycle activities from pool based on day
-        pool = goal_activities.get(goal.lower(), [])
-        if pool:
-            next_activity = pool[(day - 1) % len(pool)]
+        # Choose next activity
+        activities = goal_activities.get(goal.lower(), [])
+        if activities:
+            next_activity = activities[(day - 1) % len(activities)]
 
-        # Save progress
+        # Save to DB
         c.execute('''INSERT INTO user_progress (user_id, goal, day, feedback, emotion, next_activity, timestamp)
                      VALUES (?, ?, ?, ?, ?, ?, ?)''',
                   (user_id, goal, day, text, emotion, next_activity, datetime.utcnow().isoformat()))
         conn.commit()
         conn.close()
 
-    # Emotionally supportive reply
-    if 'alone' in text.lower() or 'lonely' in text.lower():
-        support = "It’s okay to feel alone sometimes. Just know you matter and your voice is heard. ❤️"
-    elif 'tired' in text.lower() or 'exhausted' in text.lower():
-        support = "You deserve rest. Please take a moment to breathe and care for yourself. 🌸"
-    elif 'happy' in text.lower() or 'joy' in text.lower():
-        support = "That’s wonderful to hear! Keep holding on to that joy 😊"
-    elif emotion == 'negative':
-        support = "I'm here for you. Whatever you're feeling is valid. Sending love 💖"
-    elif emotion == 'positive':
-        support = "That's beautiful. I'm so glad you're feeling this way! 🌼"
-    else:
-        support = "Thank you for opening up. You're not alone. Take a gentle step forward today 💫"
+    # Final response
+    response = f"{support}"
+    if goal:
+        response += f"\n\n🌱 Your next activity for *{goal.title()}* (Day {day}):\n➡️ {next_activity}"
+    return response
 
-    return f"{support}\n\n🌱 Your next activity for {goal.title() if goal else 'your goal'} (Day {day}):\n➡️ {next_activity}"
+# --- Emotional Reply Helper ---
+def generate_emotional_reply(text, emotion):
+    text = text.lower()
+    if 'alone' in text or 'lonely' in text:
+        return "It’s okay to feel alone sometimes. Just know you matter and your voice is heard. ❤️"
+    elif 'tired' in text or 'exhausted' in text:
+        return "You deserve rest. Please take a moment to breathe and care for yourself. 🌸"
+    elif 'happy' in text or 'joy' in text:
+        return "That’s wonderful to hear! Keep holding on to that joy 😊"
+    elif emotion == 'negative':
+        return "I'm here for you. Whatever you're feeling is valid. Sending love 💖"
+    elif emotion == 'positive':
+        return "That's beautiful. I'm so glad you're feeling this way! 🌼"
+    else:
+        return "Thank you for opening up. You're not alone. Take a gentle step forward today 💫"
 
 # --- Translation ---
 def translate_to_english(text):
