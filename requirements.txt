@@ -1,8 +1,7 @@
---extra-index-url https://download.pytorch.org/whl/cpu
-
 flask
 flask_cors
-torch==2.5.1+cpu
-transformers==4.30.2
-deep-translator
-tokenizers==0.13.3
+transformers==4.40.1
+tokenizers==0.15.2
+torch==2.2.2+cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
+deep-translator==1.11.4
