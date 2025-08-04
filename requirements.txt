@@ -1,6 +1,4 @@
 # requirements.txt (lighter version)
 flask
 flask_cors
-transformers==4.30.2
-torch==2.0.0+cpu
-deep-translator
+
