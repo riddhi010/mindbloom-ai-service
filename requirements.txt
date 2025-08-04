@@ -1,7 +1,8 @@
-flask
-flask_cors
+Flask==2.3.3
+flask-cors==4.0.0
 transformers==4.40.1
-tokenizers==0.15.2
-torch==2.2.2+cpu
---extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.3.0
 deep-translator==1.11.4
+# Remove tokenizers version — let transformers install the correct one automatically
+# Or if you want to be explicit and safe, use:
+tokenizers==0.19.1
