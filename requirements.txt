@@ -5,3 +5,4 @@ flask_cors
 torch==2.5.1+cpu
 transformers==4.30.2
 deep-translator
+tokenizers==0.13.3
