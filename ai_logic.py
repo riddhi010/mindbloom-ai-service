@@ -5,19 +5,6 @@ from datetime import datetime
 # Lightweight model loaded once
 sentiment_pipeline = pipeline("sentiment-analysis")
 
-# Emotion Detection
-def detect_emotion(text):
-    try:
-        text = text[:300]  # Limit length for memory
-        result = sentiment_pipeline(text)[0]
-        return 'positive' if result['label'].lower() == 'positive' else 'negative'
-    except:
-        return 'neutral'
-
-
-
-
-
 # Emotional Reply Logic
 def generate_emotional_reply(text, emotion):
     text = text.lower()
