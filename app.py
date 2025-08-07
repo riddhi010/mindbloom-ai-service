@@ -2,11 +2,13 @@ import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
+
+
 from ai_logic import (
     generate_emotional_reply,
     translate_to_english,
     translate_back,
-    sentiment_pipeline  # Reuse the already-loaded pipeline
+    sentiment_pipeline  
 )
 
 app = Flask(__name__)
@@ -40,5 +42,5 @@ def analyze_chat():
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))  # For Render/Fly.io compatibility
+    port = int(os.environ.get('PORT', 7860))  # For Render/Fly.io compatibility
     app.run(host='0.0.0.0', port=port)
