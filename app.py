@@ -17,7 +17,7 @@ def analyze_chat():
     lang = data.get('lang', 'en')
 
     translated_text = translate_to_english(user_text)
-    ai_reply = generate_response(translated_text)  # No user_id or goal for chat
+    ai_reply = generate_emotional_reply(translated_text)  # No user_id or goal for chat
 
     if lang != 'en':
         ai_reply = translate_back(ai_reply, lang)
