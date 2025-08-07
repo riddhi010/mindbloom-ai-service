@@ -1,9 +1,19 @@
+import os
+
+# Set HuggingFace cache directory to a writable location
+os.makedirs("/tmp/hf_home", exist_ok=True)
+os.environ['HF_HOME'] = '/tmp/hf_home'
+
 from transformers import pipeline
 from deep_translator import GoogleTranslator
 from datetime import datetime
 
-# Lightweight model loaded once
-sentiment_pipeline = pipeline("sentiment-analysis")
+# Explicitly use a lightweight model with specific revision
+sentiment_pipeline = pipeline(
+    "sentiment-analysis",
+    model="distilbert/distilbert-base-uncased-finetuned-sst-2-english",
+    revision="af0f99b"
+)
 
 # Emotional Reply Logic
 def generate_emotional_reply(text, emotion):
@@ -20,8 +30,6 @@ def generate_emotional_reply(text, emotion):
         return "That's beautiful. I'm so glad you're feeling this way! 🌼"
     else:
         return "Thank you for opening up. You're not alone. Take a gentle step forward today 💫"
-
-
 
 # Translation Functions
 def translate_to_english(text):
