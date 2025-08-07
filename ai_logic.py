@@ -1,6 +1,5 @@
 from transformers import pipeline
 from deep_translator import GoogleTranslator
-import sqlite3
 from datetime import datetime
 
 # Lightweight model loaded once
@@ -15,49 +14,9 @@ def detect_emotion(text):
     except:
         return 'neutral'
 
-# DB Setup
-def init_db():
-    conn = sqlite3.connect('/tmp/mindbloom_user_data.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS user_progress (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id TEXT,
-                    goal TEXT,
-                    day INTEGER,
-                    feedback TEXT,
-                    emotion TEXT,
-                    next_activity TEXT,
-                    timestamp TEXT
-                )''')
-    conn.commit()
-    conn.close()
 
-init_db()
 
-# Activities for each goal
-goal_activities = {
-    "stress relief": [
-        "Take a 5-minute breathing break.",
-        "Write down 3 things you're grateful for.",
-        "Listen to calming music for 10 minutes.",
-        "Take a short walk outside.",
-        "Practice a 2-minute body scan meditation."
-    ],
-    "focus improvement": [
-        "Work in a distraction-free environment for 20 mins.",
-        "Write your top 3 tasks for the day.",
-        "Try the Pomodoro technique for a task.",
-        "Read a book for 15 minutes without interruptions.",
-        "Do a quick brain dump journaling exercise."
-    ],
-    "self-confidence": [
-        "Write down one thing you’re proud of today.",
-        "Stand tall and do a power pose for 2 minutes.",
-        "Recall a time when you succeeded at something.",
-        "Compliment yourself in the mirror.",
-        "List 3 of your unique strengths."
-    ]
-}
+
 
 # Emotional Reply Logic
 def generate_emotional_reply(text, emotion):
@@ -75,31 +34,7 @@ def generate_emotional_reply(text, emotion):
     else:
         return "Thank you for opening up. You're not alone. Take a gentle step forward today 💫"
 
-# Response Generator
-def generate_response(text, user_id=None, goal=None):
-    emotion = detect_emotion(text)
-    support = generate_emotional_reply(text, emotion)
-    response = f"{support}"
 
-    if user_id and goal:
-        conn = sqlite3.connect('mindbloom_user_data.db')
-        c = conn.cursor()
-
-        c.execute("SELECT COUNT(*) FROM user_progress WHERE user_id=? AND goal=?", (user_id, goal))
-        day = c.fetchone()[0] + 1
-
-        activities = goal_activities.get(goal.lower(), [])
-        next_activity = activities[(day - 1) % len(activities)] if activities else "Keep going, you're doing great!"
-
-        c.execute('''INSERT INTO user_progress (user_id, goal, day, feedback, emotion, next_activity, timestamp)
-                     VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                  (user_id, goal, day, text, emotion, next_activity, datetime.utcnow().isoformat()))
-        conn.commit()
-        conn.close()
-
-        response += f"\n\n🌱 Your next activity for *{goal.title()}* (Day {day}):\n➡️ {next_activity}"
-
-    return response
 
 # Translation Functions
 def translate_to_english(text):
