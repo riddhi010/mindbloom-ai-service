@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS  # <- import this
 from ai_logic import (
-    generate_response,
+    generate_emotional_reply,
     translate_to_english,
     translate_back
 )
