@@ -4,7 +4,7 @@ from deep_translator import GoogleTranslator
 from langdetect import detect
 from openai import OpenAI
 
-# ✅ Use OpenRouter endpoint
+
 client = OpenAI(
     api_key=os.environ.get("OPENROUTER_API_KEY"),
     base_url="https://openrouter.ai/api/v1"
@@ -50,7 +50,7 @@ Friend:"""
 
     try:
         response = client.chat.completions.create(
-            model="openai/gpt-3.5-turbo",  # ✅ OpenRouter model name
+            model="openai/gpt-3.5-turbo",  
             messages=[
                 {"role": "system", "content": "You are a compassionate emotional support assistant."},
                 {"role": "user", "content": prompt}
