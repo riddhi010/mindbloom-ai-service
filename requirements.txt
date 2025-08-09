@@ -3,8 +3,6 @@ flask-cors==4.0.0
 transformers==4.40.1
 torch==2.3.0
 deep-translator==1.11.4
-# Remove tokenizers version — let transformers install the correct one automatically
-# Or if you want to be explicit and safe, use:
 tokenizers==0.19.1
 sentencepiece
 protobuf>=3.20
