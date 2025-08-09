@@ -1,9 +1,0 @@
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.log
-.env
-.vscode/
-*.zip
-node_modules/
